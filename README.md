@@ -1,2 +1,4 @@
 # Controle de validade
-Contém meu projeto pessoal visando a melhoria no meu ambiente de trabalho.
+Produtos são ativos importantíssimos para uma empresa.Cada produto gera lucro, é um investimento. Quando um produto ainda em estoque deixa de ser comercializado por conta de sua data de expiração ele deixa de ser lucro e passa a ser despesa.
+Pensando nos empresários de pequenas empresas, em que muitas vezes a gestão é centralizada e o tempo para dar conta de tudo é curto, criei o Software Controle de Validade.
+É simples de usar e intuitivo. Digite o nome do produto, a data de validade e o lote. Pronto! Essas informações serão salvas na nuvem, atualmente Firebase, sendo atualizado a cada 1 minuto para ser mais preciso. Itens em vermelho indicam a expiração, itens em laranja indicam a aproximidade da data limite e itens em verde indicam que o item está fora da margem de "perigo". Em breve, leitura dos códigos de barras para facilitar o cadastramento.
