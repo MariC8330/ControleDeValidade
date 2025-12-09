@@ -1,0 +1,70 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Controle de Validade</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <h1>Login</h1>
+
+  <form id="login-form">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <p>Não tem conta? <a href="#" id="criar-conta">Criar uma agora</a></p>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCh3QwGTt1M2nP4BCQ4xIPVgdcxhX1PoP8",
+    authDomain: "controle-validade-a9f3d.firebaseapp.com",
+    projectId: "controle-validade-a9f3d",
+    storageBucket: "controle-validade-a9f3d.firebasestorage.app",
+    messagingSenderId: "881399612126",
+    appId: "1:881399612126:web:e74bce79e6f32dbfd4b84f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const loginForm = document.getElementById("login-form");
+    const criarConta = document.getElementById("criar-conta");
+
+    loginForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      signInWithEmailAndPassword(auth, email, senha)
+        .then(() => {
+          window.location.href = "index.html";
+        })
+        .catch((error) => {
+          alert("Erro ao fazer login: " + error.message);
+        });
+    });
+
+    criarConta.addEventListener("click", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const senha = document.getElementById("senha").value;
+
+      createUserWithEmailAndPassword(auth, email, senha)
+        .then(() => {
+          alert("Conta criada com sucesso! Faça login.");
+        })
+        .catch((error) => {
+          alert("Erro ao criar conta: " + error.message);
+        });
+    });
+  </script>
+</body>
+</html>

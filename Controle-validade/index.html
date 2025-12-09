@@ -1,0 +1,151 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Controle de Validade</title>
+  <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body>
+  <h1>Controle de Validade</h1>
+
+  <form id="form-produto">
+    <input type="text" id="nome" placeholder="Nome do produto" required>
+    <input type="date" id="validade" required>
+    <input type="text" id="lote" placeholder="Lote" required>
+    <button type="submit">Salvar</button>
+  </form>
+
+  <h2>Buscar Produto</h2>
+  <input type="text" id="busca" placeholder="Buscar por nome ou lote">
+
+  <h2>Produtos Cadastrados</h2>
+  <ul id="lista-produtos"></ul>
+
+  <button onclick="sair()">Sair</button>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCh3QwGTt1M2nP4BCQ4xIPVgdcxhX1PoP8",
+    authDomain: "controle-validade-a9f3d.firebaseapp.com",
+    projectId: "controle-validade-a9f3d",
+    storageBucket: "controle-validade-a9f3d.firebasestorage.app",
+    messagingSenderId: "881399612126",
+    appId: "1:881399612126:web:e74bce79e6f32dbfd4b84f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
+
+    const form = document.getElementById("form-produto");
+    const lista = document.getElementById("lista-produtos");
+    const buscaInput = document.getElementById("busca");
+    const produtosRef = collection(db, "produtos");
+    let editandoId = null;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById("nome").value;
+      const validade = document.getElementById("validade").value;
+      const lote = document.getElementById("lote").value;
+
+      if (editandoId) {
+        const produtoRef = doc(db, "produtos", editandoId);
+        await updateDoc(produtoRef, { nome, validade, lote });
+        editandoId = null;
+      } else {
+        await addDoc(produtosRef, { nome, validade, lote });
+      }
+
+      form.reset();
+      carregarProdutos();
+    });
+
+    async function carregarProdutos(filtro = "") {
+      lista.innerHTML = "";
+      const querySnapshot = await getDocs(produtosRef);
+      const hoje = new Date();
+
+      querySnapshot.forEach((docItem) => {
+        const produto = docItem.data();
+        const id = docItem.id;
+        const dataValidade = new Date(produto.validade);
+        const diffDias = Math.ceil((dataValidade - hoje) / (1000 * 60 * 60 * 24));
+
+        if (
+          produto.nome.toLowerCase().includes(filtro.toLowerCase()) ||
+          produto.lote.toLowerCase().includes(filtro.toLowerCase())
+        ) {
+          const li = document.createElement("li");
+          let classe = "verde";
+          let alerta = "";
+
+          if (diffDias < 0) {
+            classe = "vermelho";
+            alerta = `(expirou há ${Math.abs(diffDias)} dias)`;
+          } else if (diffDias <= 90) {
+            classe = "laranja";
+            alerta = `(faltam ${diffDias} dias para vencer)`;
+          } else if (diffDias <= 180) {
+            classe = "amarelo";
+            alerta = `(faltam ${diffDias} dias para vencer)`;
+          } else if (diffDias >180) {
+            classe = "verde";
+          }
+
+          li.className = classe;
+          li.innerHTML = `
+  <div>
+    <strong>${produto.nome}</strong> - Validade: ${produto.validade} - Lote: ${produto.lote} <span>${alerta}</span>
+  </div>
+  <div class="botoes">
+    <button class="editar" onclick="editarProduto('${id}', '${produto.nome}', '${produto.validade}', '${produto.lote}')">Editar</button>
+    <button class="excluir" onclick="excluirProduto('${id}')">Excluir</button>
+  </div>
+`;
+
+          lista.appendChild(li);
+        }
+      });
+    }
+
+    window.excluirProduto = async function (id) {
+      await deleteDoc(doc(db, "produtos", id));
+      carregarProdutos();
+    };
+
+    window.editarProduto = function (id, nome, validade, lote) {
+      document.getElementById("nome").value = nome;
+      document.getElementById("validade").value = validade;
+      document.getElementById("lote").value = lote;
+      editandoId = id;
+    };
+
+    buscaInput.addEventListener("input", () => {
+      carregarProdutos(buscaInput.value);
+    });
+
+    window.sair = () => {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
+    };
+
+    carregarProdutos();
+    setInterval(() => carregarProdutos(buscaInput.value), 60000);
+  </script>
+</body>
+</html>
